@@ -15,52 +15,72 @@ public class Proces {
 
         System.out.println(id + ": Pornesc. Ascult pe portul " + portAscultare + ", trimit la " + ipUrmator + ":" + portUrmator);
 
-        // server pt a primi mesaj de la procesul anterior
-        ServerSocket serverSocket = new ServerSocket(portAscultare);
+        // ServerSocket pentru a asculta
+        try (ServerSocket serverSocket = new ServerSocket(portAscultare)) {
+            // thread pentru conectarea la urmatorul proces
+            final PrintWriter[] outToNext = {null}; // folosire array pt a partaja PrintWriter intre thread-uri
+            Thread connectThread = new Thread(() -> {
+                while (outToNext[0] == null) {
+                    try {
+                        Socket socketToNext = new Socket(ipUrmator, portUrmator);
+                        outToNext[0] = new PrintWriter(socketToNext.getOutputStream(), true);
+                        System.out.println(id + ": Conectat la urmatorul proces.");
+                    } catch (IOException e) {
+                        System.out.println(id + ": Nu pot conecta la urmatorul proces, retry in 1 secunda...");
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException ignored) {}
+                    }
+                }
+            });
+            connectThread.start();
 
-        // socket pentru a trimite mesajul la procesul urmator
-        Socket socketToNext = null;
-        PrintWriter outToNext = null;
-
-        // conectare la urmatorul proces
-        while (socketToNext == null) {
-            try {
-                socketToNext = new Socket(ipUrmator, portUrmator);
-                outToNext = new PrintWriter(socketToNext.getOutputStream(), true);
-            } catch (IOException e) {
-                System.out.println(id + ": Nu pot conecta la urmatorul proces, retry in 1 secunda...");
-                try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
-            }
-        }
-        System.out.println(id + ": Conectat la urmatorul proces.");
-
-        if (id.equals("P1")) {
             // P1 va trimite primul mesaj
-            String mesajInitial = "Salut de la P1";
-            System.out.println(id + ": Trimit mesaj initial: " + mesajInitial);
-            outToNext.println(mesajInitial);
+            if (id.equals("P1")) {
+                String mesajInitial = "Salut de la P1";
+                System.out.println(id + ": Trimit mesaj initial: " + mesajInitial);
+                // se asteapta o conexiune
+                while (outToNext[0] == null) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ignored) {}
+                }
+                outToNext[0].println(mesajInitial);
+            }
+
+            // thread pentru a asculta mesaje
+            Thread listenThread = new Thread(() -> {
+                try {
+                    Socket socketFromPrev = serverSocket.accept();
+                    System.out.println(id + ": Am primit conexiune de la procesul anterior.");
+                    try (BufferedReader inFromPrev = new BufferedReader(new InputStreamReader(socketFromPrev.getInputStream()))) {
+                        String mesaj;
+                        while ((mesaj = inFromPrev.readLine()) != null) {
+                            System.out.println(id + ": Am primit mesaj: " + mesaj);
+                            synchronized (outToNext) {
+                                if (outToNext[0] != null) {
+                                    System.out.println(id + ": Trimit mesaj mai departe: " + mesaj);
+                                    outToNext[0].println(mesaj);
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    System.out.println(id + ": Eroare la citire: " + e.getMessage());
+                }
+            });
+            listenThread.start();
+
+            // asteapta terminarea celor 2 threaduri
+            try {
+                listenThread.join();
+                connectThread.join();
+            } catch (InterruptedException e) {
+                System.out.println(id + ": Intrerupt: " + e.getMessage());
+            }
+
+            System.out.println(id + ": Am terminat.");
         }
-
-        // se asterapta conexiunea de la procesul anterior
-        Socket socketFromPrev = serverSocket.accept();
-        System.out.println(id + ": Am primit conexiune de la procesul anterior.");
-        BufferedReader inFromPrev = new BufferedReader(new InputStreamReader(socketFromPrev.getInputStream()));
-
-        // citire mesaj
-        String mesaj = inFromPrev.readLine();
-        System.out.println(id + ": Am primit mesaj: " + mesaj);
-
-        // trimitere mesaj la urmatorul proces
-        System.out.println(id + ": Trimit mesaj mai departe: " + mesaj);
-        outToNext.println(mesaj);
-
-        inFromPrev.close();
-        socketFromPrev.close();
-        outToNext.close();
-        socketToNext.close();
-        serverSocket.close();
-
-        System.out.println(id + ": Am terminat.");
     }
 }
 
