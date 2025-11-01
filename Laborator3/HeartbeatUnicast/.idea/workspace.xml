@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2739bc31-ecfa-4d2b-8360-d3bebeb679c7" name="Changes" comment="Commit" />
+    <list default="true" id="2739bc31-ecfa-4d2b-8360-d3bebeb679c7" name="Changes" comment="Adaugare sisteme Heartbeat unicast si multicast" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -38,7 +38,7 @@
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/Ruben/Desktop/Sisteme Distribuite/Laborator3/HeartbeatUnicast",
+    "last_opened_file_path": "C:/Users/Ruben/Desktop/Sisteme Distribuite/Laborator3/ExempluHeartbeat",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -66,7 +66,6 @@
       <workItem from="1761647670587" duration="5957000" />
       <workItem from="1761924302698" duration="13532000" />
       <workItem from="1761993650605" duration="10678000" />
-      <workItem from="1762015585036" duration="661000" />
     </task>
     <task id="LOCAL-00001" summary="Adaugare sisteme Heartbeat unicast si multicast">
       <option name="closed" value="true" />
@@ -76,31 +75,7 @@
       <option name="project" value="LOCAL" />
       <updated>1762014423322</updated>
     </task>
-    <task id="LOCAL-00002" summary="Commit">
-      <option name="closed" value="true" />
-      <created>1762015634254</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1762015634254</updated>
-    </task>
-    <task id="LOCAL-00003" summary="Commit">
-      <option name="closed" value="true" />
-      <created>1762016135983</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1762016135983</updated>
-    </task>
-    <task id="LOCAL-00004" summary="Commit">
-      <option name="closed" value="true" />
-      <created>1762016139200</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1762016139200</updated>
-    </task>
-    <option name="localTasksCounter" value="5" />
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -108,7 +83,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Adaugare sisteme Heartbeat unicast si multicast" />
-    <MESSAGE value="Commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="Commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adaugare sisteme Heartbeat unicast si multicast" />
   </component>
 </project>
