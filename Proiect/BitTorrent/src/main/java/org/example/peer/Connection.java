@@ -3,7 +3,6 @@ package org.example.peer;
 import org.example.core.protocol.*;
 import java.io.*;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 
 /**
  * Manages connection to a single peer

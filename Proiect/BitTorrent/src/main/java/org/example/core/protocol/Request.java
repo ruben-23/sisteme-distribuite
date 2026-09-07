@@ -10,6 +10,11 @@ import java.nio.ByteBuffer;
  * - index: 4 bytes (piece index)
  * - begin: 4 bytes (offset within piece)
  * - length: 4 bytes (amount to request, usually 16KB)
+ *
+ * +-------------+-------------+-------------+
+ * | piece index | begin       | length      |
+ * | 4 bytes     | 4 bytes     | 4 bytes     |
+ * +-------------+-------------+-------------+
  */
 public class Request {
     public static final byte MESSAGE_ID = 6;

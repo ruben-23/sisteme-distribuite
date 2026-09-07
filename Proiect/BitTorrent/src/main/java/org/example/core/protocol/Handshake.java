@@ -13,6 +13,12 @@ import java.util.Arrays;
  * - reserved: 8 bytes (all zeros)
  * - info_hash: 20 bytes
  * - peer_id: 20 bytes
+ *
+ * +--------+---------------------+----------+------------+----------+
+ * | pstrlen|       protocol      | reserved |  info_hash | peer_id  |
+ * | 1 byte |      19 bytes       | 8 bytes  | 20 bytes   | 20 bytes |
+ * +--------+---------------------+----------+------------+----------+
+ *
  */
 public class Handshake {
     private static final String PROTOCOL = "BitTorrent protocol";

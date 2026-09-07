@@ -173,17 +173,17 @@ public class PeerNode {
         }
 
         System.out.println("SHARED FILES:");
-        System.out.println("──────────────────────────────────────────────────────────────");
+        System.out.println("----------------------------------------------------------");
         for (Map.Entry<String, Set<InetSocketAddress>> e : dht.getTorrentPeersMap().entrySet()) {
             String hash = e.getKey();
             String name = dht.getTorrentName(hash);
             long size = dht.getTorrentSize(hash);
             System.out.println("File: " + name);
-            System.out.println("  Size: " + size + " bytes");
-            System.out.println("  Info hash: " + hash.substring(0, 16) + "...");
-            System.out.println("  Shared by:");
+            System.out.println("Size: " + size + " bytes");
+            System.out.println("Info hash: " + hash.substring(0, 16) + "...");
+            System.out.println("Shared by:");
             for (InetSocketAddress p : e.getValue()) {
-                System.out.println("    • " + p.getAddress().getHostAddress() + ":" + p.getPort());
+                System.out.println("-" + p.getAddress().getHostAddress() + ":" + p.getPort());
             }
             System.out.println();
         }

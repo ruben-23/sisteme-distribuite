@@ -12,6 +12,17 @@ import java.util.*;
  * - FIND_NODE: find nodes close to target
  * - ANNOUNCE_PEER: announce we have a torrent
  * - GET_PEERS: find peers for a torrent
+ *
+ *
+ * <p>A message contains:
+ * <ul>
+ * <li>{@code t} - transaction ID used to match a response to a query</li>
+ * <li>{@code y} - message type: {@code q} for query or {@code r} for response</li>
+ * <li>{@code q} - name of the query, such as ping or find_node</li>
+ * <li>{@code a} - arguments/data sent with a query</li>
+ * <li>{@code r} - response data returned by a node</li>
+ * </ul>
+ *
  */
 public class Message {
     public enum Type {
@@ -50,25 +61,11 @@ public class Message {
             message.put("q", type.name().toLowerCase());
             message.put("a", data);
         }    return Bencode.encode(message);
-    }/**
+    }
+
+    /**
      * Parse from bencode
      */
-//    public static Message parse(byte[] bytes) throws IOException {
-//        Map<String, Object> map = (Map<String, Object>)Bencode.decode(bytes);
-//
-//        String tid = new String((byte[])map.get("t"));
-//        String messageType = new String((byte[])map.get("y"));
-//
-//        Message msg;
-//        if (messageType.equals("r")) {
-//            msg = new Message(Type.RESPONSE, tid);
-//            msg.data = (Map<String, Object>)map.get("r");
-//        } else {
-//            String queryType = new String((byte[])map.get("q"));
-//            msg = new Message(Type.valueOf(queryType.toUpperCase()), tid);
-//            msg.data = (Map<String, Object>)map.get("a");
-//        }    return msg;
-//    }
     public static Message parse(byte[] bytes) throws IOException {
         if (bytes == null || bytes.length == 0) {
             throw new IOException("Empty message");
@@ -91,7 +88,6 @@ public class Message {
                     " | Raw data: '" + preview + "'", e);
         }
 
-        // Rest unchanged...
         String tid = new String((byte[])map.get("t"));
         String messageType = new String((byte[])map.get("y"));
 

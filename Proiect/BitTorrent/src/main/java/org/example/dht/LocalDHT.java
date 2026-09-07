@@ -33,16 +33,16 @@ public class LocalDHT {
         this.nodes = new ConcurrentHashMap<>();
         this.executor = Executors.newCachedThreadPool();
 
-        // 1. Create socket and enable address reuse
+        //Create socket and enable address reuse
         this.socket = new MulticastSocket(DHT_PORT);
         this.socket.setReuseAddress(true);
 
-        // 2. CRITICAL: Enable Loopback! (false means "enabled" in setLoopbackMode legacy API)
+        // Enable Loopback!
         this.socket.setLoopbackMode(false);
 
         this.group = InetAddress.getByName(MULTICAST_GROUP);
 
-        // 3. CRITICAL: Join group on ALL valid interfaces
+        //Join group on ALL valid interfaces
         joinGroupOnAllInterfaces();
 
         Logger.info("DHT started with node ID: " + Hash.toHex(nodeId));
@@ -63,11 +63,11 @@ public class LocalDHT {
                     // Join group on specific interface
                     socket.joinGroup(new InetSocketAddress(group, DHT_PORT), iface);
                 } catch (IOException e) {
-                    Logger.debug("Could not join on " + iface.getName() + ": " + e.getMessage());
+//                    Logger.debug("Could not join on " + iface.getName() + ": " + e.getMessage());
                 }
             }
         } catch (SocketException e) {
-            Logger.error("Error enumerating interfaces: " + e.getMessage());
+//            Logger.error("Error enumerating interfaces: " + e.getMessage());
         }
     }
 
@@ -190,9 +190,15 @@ public class LocalDHT {
         Object portObj = msg.get("port");
 
         int port;
-        if (portObj instanceof Long) port = ((Long) portObj).intValue();
-        else if (portObj instanceof Integer) port = (Integer) portObj;
-        else return;
+        if (portObj instanceof Long) {
+            port = ((Long) portObj).intValue();
+        }
+        else if (portObj instanceof Integer){
+            port = (Integer) portObj;
+        }
+        else {
+            return;
+        }
 
         byte[] remoteNodeId = (byte[])msg.get("node_id");
 

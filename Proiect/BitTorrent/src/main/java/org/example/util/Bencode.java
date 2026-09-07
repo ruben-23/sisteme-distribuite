@@ -6,7 +6,7 @@ import java.util.*;
 
 public class Bencode {
 
-    private static final boolean DEBUG = true;  //  set to false to silence
+    private static final boolean DEBUG = true;
 
     /**
      * Decode bencoded data into Java objects
