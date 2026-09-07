@@ -2,7 +2,7 @@ package org.example.peer;
 
 import org.example.core.*;
 import org.example.core.protocol.Handshake;
-import org.example.dht.LocalDHT;
+import org.example.discovery.LocalDiscovery;
 import org.example.util.*;
 import java.io.File;
 import java.io.IOException;
@@ -12,24 +12,24 @@ import java.util.*;
 import java.util.concurrent.*;
 
 /**
- * Main peer node that coordinates everything
+ * Main peer node that coordinates everything.
  */
 public class PeerNode {
     private byte[] peerId;                    // Unique ID for this peer (like "-LT0001-XXXXXX...")
-    private LocalDHT dht;                     // Custom DHT for peer discovery system
+    private LocalDiscovery discovery;         // Local multicast discovery for peers on the LAN
     private PeerServer server;                // Listens for incoming connections
     private PeerClient client;                // Connects to other peers
-    private Map<String, TorrentFile> torrents;           // Loaded .torrent files (by info_hash) [torrents the peer knows about]
+    private Map<String, TorrentFile> torrents;           // Loaded .torrent files (by info_hash)
     private Map<String, FileManager> fileManagers;       // Handles reading/writing pieces
     private Map<String, Set<Connection>> connections;    // Active peer connections per torrent
     private int port;
 
     public PeerNode(int port) throws IOException {
-        this.peerId = generatePeerId();  // Creates ID like -LT0001-abcd1234...
+        this.peerId = generatePeerId();
         this.port = port;
-        this.dht = new LocalDHT();       // Starts local peer discovery
-        this.server = new PeerServer(port, this);  // Accepts incoming connections
-        this.client = new PeerClient(this);        // Makes outgoing connections
+        this.discovery = new LocalDiscovery();
+        this.server = new PeerServer(port, this);
+        this.client = new PeerClient(this);
         this.torrents = new ConcurrentHashMap<>();
         this.fileManagers = new ConcurrentHashMap<>();
         this.connections = new ConcurrentHashMap<>();
@@ -38,12 +38,10 @@ public class PeerNode {
     }
 
     private byte[] generatePeerId() {
-        // Format: -LT0001-<12 random chars>
         byte[] id = new byte[20];
         String prefix = "-LT0001-";
         System.arraycopy(prefix.getBytes(), 0, id, 0, 8);
 
-        // Fill the rest with random bytes
         Random random = new SecureRandom();
         byte[] randomBytes = new byte[20 - prefix.length()];
         random.nextBytes(randomBytes);
@@ -57,38 +55,34 @@ public class PeerNode {
     }
 
     public void start() {
-        dht.start();
+        discovery.start();
         server.start();
         Logger.info("Peer node started on port " + port);
     }
 
     /**
-     * Share a file
+     * Share a file.
      */
     public void shareFile(File file, File downloadDir) throws IOException {
-        // Create torrent
         TorrentFile torrent = TorrentFile.createFromFile(file);
         String infoHashHex = Hash.toHex(torrent.getInfoHash());
 
         torrents.put(infoHashHex, torrent);
 
-        // Create file manager (file already exists)
         FileManager fileManager = new FileManager(torrent, downloadDir);
         fileManagers.put(infoHashHex, fileManager);
 
-        // Announce to DHT
-        dht.announceTorrent(torrent.getInfoHash(), port);
+        discovery.announceTorrent(torrent.getInfoHash(), port);
 
-        // Save .torrent file
         File torrentFile = new File(downloadDir, file.getName() + ".torrent");
         torrent.saveTo(torrentFile);
 
         Logger.info("Sharing file: " + file.getName());
-        dht.registerTorrentName(torrent.getInfoHash(), torrent.getName(), torrent.getTotalLength());
+        discovery.registerTorrentName(torrent.getInfoHash(), torrent.getName(), torrent.getTotalLength());
     }
 
     /**
-     * Download a file from torrent
+     * Download a file from torrent.
      */
     public void downloadFromTorrent(File torrentFile, File downloadDir) throws IOException {
         TorrentFile torrent = TorrentFile.loadFrom(torrentFile);
@@ -96,7 +90,6 @@ public class PeerNode {
 
         torrents.put(infoHashHex, torrent);
 
-        // Create file manager
         FileManager fileManager = new FileManager(torrent, downloadDir);
         fileManagers.put(infoHashHex, fileManager);
 
@@ -105,10 +98,8 @@ public class PeerNode {
             return;
         }
 
-        // Find peers via DHT
-        dht.findPeers(torrent.getInfoHash());
+        discovery.findPeers(torrent.getInfoHash());
 
-        // Wait a bit for DHT responses
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
@@ -116,16 +107,15 @@ public class PeerNode {
         }
 
         // Connect to peers
-        Set<InetSocketAddress> peers = dht.getPeers(torrent.getInfoHash());
+        Set<InetSocketAddress> peers = discovery.getPeers(torrent.getInfoHash());
         Logger.info("Found " + peers.size() + " peers");
 
         for (InetSocketAddress peer : peers) {
             client.connectToPeer(peer, torrent.getInfoHash());
         }
 
-        // Also announce ourselves
-        dht.announceTorrent(torrent.getInfoHash(), port);
-        dht.registerTorrentName(torrent.getInfoHash(), torrent.getName(), torrent.getTotalLength());
+        discovery.announceTorrent(torrent.getInfoHash(), port);
+        discovery.registerTorrentName(torrent.getInfoHash(), torrent.getName(), torrent.getTotalLength());
     }
 
     public boolean hasInfoHash(byte[] infoHash) {
@@ -150,7 +140,7 @@ public class PeerNode {
     }
 
     public void stop() {
-        dht.stop();
+        discovery.stop();
         server.stop();
         client.shutdown();
 
@@ -162,22 +152,22 @@ public class PeerNode {
     }
 
     public void showNetworkStatus() {
-        System.out.println("\n=== LAN BITTORRENT NETWORK STATUS ===");
-        System.out.println("Known nodes: " + dht.getKnownNodesCount());
-        System.out.println("Active torrents: " + dht.getActiveTorrentCount());
+        System.out.println("\n=== LAN BITTORRENT DISCOVERY STATUS ===");
+        System.out.println("Known nodes: " + discovery.getKnownNodesCount());
+        System.out.println("Active torrents: " + discovery.getActiveTorrentCount());
         System.out.println();
 
-        if (dht.getTorrentPeersMap().isEmpty()) {
+        if (discovery.getTorrentPeersMap().isEmpty()) {
             System.out.println("No activity yet. Start sharing on other machines!");
             return;
         }
 
         System.out.println("SHARED FILES:");
         System.out.println("----------------------------------------------------------");
-        for (Map.Entry<String, Set<InetSocketAddress>> e : dht.getTorrentPeersMap().entrySet()) {
+        for (Map.Entry<String, Set<InetSocketAddress>> e : discovery.getTorrentPeersMap().entrySet()) {
             String hash = e.getKey();
-            String name = dht.getTorrentName(hash);
-            long size = dht.getTorrentSize(hash);
+            String name = discovery.getTorrentName(hash);
+            long size = discovery.getTorrentSize(hash);
             System.out.println("File: " + name);
             System.out.println("Size: " + size + " bytes");
             System.out.println("Info hash: " + hash.substring(0, 16) + "...");

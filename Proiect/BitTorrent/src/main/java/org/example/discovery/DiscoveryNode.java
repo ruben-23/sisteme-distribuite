@@ -1,17 +1,17 @@
-package org.example.dht;
+package org.example.discovery;
 
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 
 /**
- * Represents a node in the DHT
+ * Represents a node discovered via the local multicast discovery mechanism.
  */
-public class DHTNode {
+public class DiscoveryNode {
     private byte[] nodeId; // 20-byte ID
     private InetSocketAddress address;
     private long lastSeen;
 
-    public DHTNode(byte[] nodeId, InetSocketAddress address) {
+    public DiscoveryNode(byte[] nodeId, InetSocketAddress address) {
         this.nodeId = nodeId;
         this.address = address;
         this.lastSeen = System.currentTimeMillis();
@@ -22,7 +22,7 @@ public class DHTNode {
     }
 
     /**
-     * Calculate XOR distance between node IDs
+     * Calculate XOR distance between node IDs.
      */
     public byte[] distanceTo(byte[] targetId) {
         byte[] distance = new byte[20];
@@ -38,8 +38,8 @@ public class DHTNode {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof DHTNode)) return false;
-        return Arrays.equals(nodeId, ((DHTNode)o).nodeId);
+        if (!(o instanceof DiscoveryNode)) return false;
+        return Arrays.equals(nodeId, ((DiscoveryNode)o).nodeId);
     }
 
     @Override

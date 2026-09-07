@@ -7,7 +7,7 @@ import java.util.*;
 /**
  * Represents a .torrent file metadata
  * Structure:
- * - announce: tracker URL (we'll use DHT instead)
+ * - announce: tracker URL
  * - info:
  *   - name: filename
  *   - piece length: size of each piece

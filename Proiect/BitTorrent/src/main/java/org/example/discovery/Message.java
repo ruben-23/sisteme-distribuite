@@ -1,4 +1,4 @@
-package org.example.dht;
+package org.example.discovery;
 
 import org.example.util.Bencode;
 import java.io.IOException;
@@ -6,13 +6,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
- * DHT messages for peer discovery
+ * Discovery messages for peer discovery.
  * Types:
  * - PING: check if node is alive
  * - FIND_NODE: find nodes close to target
  * - ANNOUNCE_PEER: announce we have a torrent
  * - GET_PEERS: find peers for a torrent
- *
  *
  * <p>A message contains:
  * <ul>
@@ -22,7 +21,6 @@ import java.util.*;
  * <li>{@code a} - arguments/data sent with a query</li>
  * <li>{@code r} - response data returned by a node</li>
  * </ul>
- *
  */
 public class Message {
     public enum Type {
@@ -48,9 +46,9 @@ public class Message {
     }
 
     /**
-     * Serialize to bencode
+     * Serialize to bencode.
      */
-    public byte[] toBytes() throws IOException{
+    public byte[] toBytes() throws IOException {
         Map<String, Object> message = new LinkedHashMap<>();
         message.put("t", transactionId);
         if (type == Type.RESPONSE) {
@@ -60,22 +58,22 @@ public class Message {
             message.put("y", "q");
             message.put("q", type.name().toLowerCase());
             message.put("a", data);
-        }    return Bencode.encode(message);
+        }
+        return Bencode.encode(message);
     }
 
     /**
-     * Parse from bencode
+     * Parse from bencode.
      */
     public static Message parse(byte[] bytes) throws IOException {
         if (bytes == null || bytes.length == 0) {
             throw new IOException("Empty message");
         }
 
-        // ADD THIS DEFENSIVE CHECK
         if (bytes[0] != 'd') {
             String preview = new String(bytes, 0, Math.min(bytes.length, 50), StandardCharsets.ISO_8859_1)
                     .replace("\r", "\\r").replace("\n", "\\n");
-            throw new IOException("Received invalid/non-bencoded DHT message (starts with 0x" +
+            throw new IOException("Received invalid/non-bencoded discovery message (starts with 0x" +
                     String.format("%02X", bytes[0] & 0xFF) + "): '" + preview + "'");
         }
 
@@ -84,12 +82,12 @@ public class Message {
             map = (Map<String, Object>) Bencode.decode(bytes);
         } catch (Exception e) {
             String preview = new String(bytes, 0, Math.min(bytes.length, 100), StandardCharsets.ISO_8859_1);
-            throw new IOException("Failed to decode DHT message: " + e.getMessage() +
+            throw new IOException("Failed to decode discovery message: " + e.getMessage() +
                     " | Raw data: '" + preview + "'", e);
         }
 
-        String tid = new String((byte[])map.get("t"));
-        String messageType = new String((byte[])map.get("y"));
+        String tid = new String((byte[]) map.get("t"));
+        String messageType = new String((byte[]) map.get("y"));
 
         Message msg;
         if ("r".equals(messageType)) {
@@ -97,7 +95,7 @@ public class Message {
             Map<String, Object> r = (Map<String, Object>) map.get("r");
             msg.data = (r != null) ? r : new HashMap<>();
         } else if ("q".equals(messageType)) {
-            String queryType = new String((byte[])map.get("q"));
+            String queryType = new String((byte[]) map.get("q"));
             msg = new Message(Type.valueOf(queryType.toUpperCase()), tid);
             Map<String, Object> a = (Map<String, Object>) map.get("a");
             msg.data = (a != null) ? a : new HashMap<>();
